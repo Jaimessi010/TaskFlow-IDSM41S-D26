@@ -1,12 +1,11 @@
 from models import (
     KEY_ID,
     KEY_TITLE,
-    KEY_STATUS,
     create_task,
     is_completed,
     mark_completed,
 )
-
+from models import is_completed
 
 def add_task(tasks, title):
     """
@@ -212,13 +211,16 @@ def edit_task(tasks, task_id, new_title):
 
 # FILTRAR TAREAS POR ESTADO - RAFAEL RENTERIA
 def filter_tasks_by_status(tasks, completed):
-    """Muestra tareas por estado sin modificar los datos originales."""
+    """
+    Muestra tareas por estado sin modificar los datos originales.
+    """
     tareas_filtradas = [
         task for task in tasks
         if is_completed(task) == completed
     ]
 
     estado = "completadas" if completed else "pendientes"
+
     print(f"\n--- Tareas {estado} ---")
 
     if not tareas_filtradas:
@@ -226,4 +228,5 @@ def filter_tasks_by_status(tasks, completed):
         return
 
     list_tasks(tareas_filtradas)
-main
+
+    

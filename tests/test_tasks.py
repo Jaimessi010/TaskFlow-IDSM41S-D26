@@ -10,6 +10,8 @@ from tasks import (
     validar_task_id
 )
 
+from models import is_completed
+
 
 class TestTaskFlow(unittest.TestCase):
 
@@ -22,17 +24,19 @@ class TestTaskFlow(unittest.TestCase):
     # ==========================
 
     def test_agregar_tarea(self):
-        add_task(self.tasks, "Estudiar Python")
+        resultado = add_task(self.tasks, "Estudiar Python")
 
+        self.assertTrue(resultado)
         self.assertEqual(len(self.tasks), 1)
         self.assertEqual(self.tasks[0]["id"], 1)
         self.assertEqual(self.tasks[0]["title"], "Estudiar Python")
-        self.assertFalse(self.tasks[0]["completed"])
+        self.assertFalse(is_completed(self.tasks[0]))
 
     def test_no_agregar_tarea_duplicada(self):
         add_task(self.tasks, "Estudiar Python")
-        add_task(self.tasks, "estudiar python")
+        resultado = add_task(self.tasks, "estudiar python")
 
+        self.assertFalse(resultado)
         self.assertEqual(len(self.tasks), 1)
 
     # ==========================
@@ -40,19 +44,16 @@ class TestTaskFlow(unittest.TestCase):
     # ==========================
 
     def test_listar_tareas(self):
-        self.tasks.append({
-            "id": 1,
-            "title": "Hacer tarea",
-            "completed": False
-        })
+        add_task(self.tasks, "Hacer tarea")
 
         with patch("sys.stdout", new=StringIO()) as salida:
             list_tasks(self.tasks)
 
         resultado = salida.getvalue()
 
-        self.assertIn("Hacer tarea", resultado)
-        self.assertIn("1.", resultado)
+        self.assertIn("ID: 1", resultado)
+        self.assertIn("Nombre: Hacer tarea", resultado)
+        self.assertIn("Estado: Pendiente", resultado)
 
     def test_listar_tareas_vacias(self):
         with patch("sys.stdout", new=StringIO()) as salida:
@@ -65,26 +66,20 @@ class TestTaskFlow(unittest.TestCase):
     # ==========================
 
     def test_completar_tarea(self):
-        self.tasks.append({
-            "id": 1,
-            "title": "Terminar proyecto",
-            "completed": False
-        })
+        add_task(self.tasks, "Terminar proyecto")
 
-        complete_task(self.tasks, 1)
+        resultado = complete_task(self.tasks, 1)
 
-        self.assertTrue(self.tasks[0]["completed"])
+        self.assertTrue(resultado)
+        self.assertTrue(is_completed(self.tasks[0]))
 
     def test_completar_id_inexistente(self):
-        self.tasks.append({
-            "id": 1,
-            "title": "Terminar proyecto",
-            "completed": False
-        })
+        add_task(self.tasks, "Terminar proyecto")
 
-        complete_task(self.tasks, 99)
+        resultado = complete_task(self.tasks, 99)
 
-        self.assertFalse(self.tasks[0]["completed"])
+        self.assertFalse(resultado)
+        self.assertFalse(is_completed(self.tasks[0]))
 
     # ==========================
     # PRUEBAS: VALIDACIONES
@@ -111,46 +106,31 @@ class TestTaskFlow(unittest.TestCase):
 
     @patch("builtins.input", return_value="s")
     def test_eliminar_tarea(self, mock_input):
-        self.tasks.extend([
-            {
-                "id": 1,
-                "title": "Tarea uno",
-                "completed": False
-            },
-            {
-                "id": 2,
-                "title": "Tarea dos",
-                "completed": False
-            }
-        ])
+        add_task(self.tasks, "Tarea uno")
+        add_task(self.tasks, "Tarea dos")
 
-        delete_task(self.tasks, 1)
+        resultado = delete_task(self.tasks, 1)
 
+        self.assertTrue(resultado)
         self.assertEqual(len(self.tasks), 1)
         self.assertEqual(self.tasks[0]["title"], "Tarea dos")
         self.assertEqual(self.tasks[0]["id"], 1)
 
     @patch("builtins.input", return_value="n")
     def test_cancelar_eliminacion(self, mock_input):
-        self.tasks.append({
-            "id": 1,
-            "title": "Tarea importante",
-            "completed": False
-        })
+        add_task(self.tasks, "Tarea importante")
 
-        delete_task(self.tasks, 1)
+        resultado = delete_task(self.tasks, 1)
 
+        self.assertFalse(resultado)
         self.assertEqual(len(self.tasks), 1)
 
     def test_eliminar_id_invalido(self):
-        self.tasks.append({
-            "id": 1,
-            "title": "Tarea de prueba",
-            "completed": False
-        })
+        add_task(self.tasks, "Tarea de prueba")
 
-        delete_task(self.tasks, "abc")
+        resultado = delete_task(self.tasks, "abc")
 
+        self.assertFalse(resultado)
         self.assertEqual(len(self.tasks), 1)
 
 
